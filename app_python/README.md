@@ -128,3 +128,48 @@ For formatted JSON output, use `jq`:
 ```bash
 curl http://localhost:5000/ | jq
 ```
+
+## Docker
+
+### Building the image locally
+
+From the `app_python/` directory, build the image:
+
+```bash
+docker build -t devops-info-service .
+```
+
+Or with a tag including your Docker Hub username:
+
+```bash
+docker build -t iamkoldun/devops-info-service:latest .
+```
+
+### Running a container
+
+Run the container with port mapping (host:container):
+
+```bash
+docker run -p 5000:5000 devops-info-service
+```
+
+Or with custom port on host:
+
+```bash
+docker run -p 8080:5000 devops-info-service
+```
+
+Override environment variables if needed:
+
+```bash
+docker run -p 5000:5000 -e PORT=5000 -e HOST=0.0.0.0 devops-info-service
+```
+
+### Pulling from Docker Hub
+
+If the image is published to Docker Hub:
+
+```bash
+docker pull iamkoldun/devops-info-service:latest
+docker run -p 5000:5000 iamkoldun/devops-info-service:latest
+```

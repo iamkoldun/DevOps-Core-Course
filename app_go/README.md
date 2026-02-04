@@ -159,3 +159,26 @@ For formatted JSON output:
 ```bash
 curl http://localhost:8080/ | jq
 ```
+
+## Docker (Multi-Stage Build)
+
+### Building the image
+
+From the `app_go/` directory:
+
+```bash
+docker build -t devops-info-service-go .
+```
+
+### Running a container
+
+```bash
+docker run -p 8080:8080 devops-info-service-go
+```
+
+Test endpoints:
+
+```bash
+curl http://localhost:8080/
+curl http://localhost:8080/health
+```
