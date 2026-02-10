@@ -2,12 +2,10 @@ name: Python CI
 
 on:
   push:
-    branches: [master, main, lab03]
     paths:
       - 'app_python/**'
       - '.github/workflows/python-ci.yml'
   pull_request:
-    branches: [master, main, lab03]
     paths:
       - 'app_python/**'
       - '.github/workflows/python-ci.yml'
@@ -48,12 +46,11 @@ jobs:
         run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --cov-fail-under=70
 
       - name: Snyk vulnerability scan
-        uses: snyk/actions/python@master
-        working-directory: app_python
+        run: |
+          pip install snyk
+          snyk test --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
         continue-on-error: true
 
       - name: Upload coverage to Codecov
