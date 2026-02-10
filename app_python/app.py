@@ -81,7 +81,7 @@ def health():
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'uptime_seconds': uptime['seconds']
     }
-    logger.debug(f"Health check requested")
+    logger.debug("Health check requested")
     return jsonify(response)
 
 @app.errorhandler(404)
