@@ -46,9 +46,7 @@ jobs:
         run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --cov-fail-under=70
 
       - name: Snyk vulnerability scan
-        run: |
-          pip install snyk
-          snyk test --severity-threshold=high
+        run: npx snyk@latest test --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
