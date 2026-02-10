@@ -1,7 +1,7 @@
 # DevOps Info Service
 
 [![Python CI](https://github.com/iamkoldun/DevOps-Core-Course/actions/workflows/python-ci.yml/badge.svg)](https://github.com/iamkoldun/DevOps-Core-Course/actions/workflows/python-ci.yml)
-[![codecov](https://codecov.io/gh/iamkoldun/DevOps-Core-Course/graph/badge.svg)](https://codecov.io/gh/iamkoldun/DevOps-Core-Course)
+[![codecov](https://codecov.io/gh/iamkoldun/DevOps-Core-Course/branch/lab03/graph/badge.svg?token=QZYJE7868F)](https://codecov.io/gh/iamkoldun/DevOps-Core-Course)
 
 ## Overview
 
