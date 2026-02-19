@@ -6,9 +6,4 @@ terraform.tfvars
 *.tfvars
 *.pem
 *.key
-venv/
-.venv/
-__pycache__/
-*.pyc
-Pulumi.*.yaml
-.pulumi/
+*.json

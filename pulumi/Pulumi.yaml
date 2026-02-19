@@ -1,0 +1,3 @@
+name: lab04-yandex-cloud
+runtime: python
+description: Lab 04 — Yandex Cloud VM created with Pulumi (Python)
