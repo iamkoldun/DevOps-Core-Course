@@ -1,0 +1,8 @@
+yc_token            = "your-yandex-cloud-oauth-token"
+folder_id           = "your-folder-id"
+zone                = "ru-central1-a"
+prefix              = "lab04"
+image_id            = "fd8ciuqfa001h8s9sa7i"
+ssh_user            = "ubuntu"
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+allowed_ssh_cidr    = "YOUR_IP/32"
