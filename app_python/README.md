@@ -1,5 +1,8 @@
 # DevOps Info Service
 
+[![Python CI](https://github.com/iamkoldun/DevOps-Core-Course/actions/workflows/python-ci.yml/badge.svg)](https://github.com/iamkoldun/DevOps-Core-Course/actions/workflows/python-ci.yml)
+[![codecov](https://codecov.io/gh/iamkoldun/DevOps-Core-Course/branch/lab03/graph/badge.svg?token=QZYJE7868F)](https://codecov.io/gh/iamkoldun/DevOps-Core-Course)
+
 ## Overview
 
 DevOps Info Service is a web application that provides detailed information about itself and its runtime environment. This service reports system information, runtime statistics, and request metadata through a RESTful API.
@@ -112,6 +115,23 @@ curl http://localhost:5000/health
 ```
 
 ## Testing
+
+### Unit tests
+
+Install dev dependencies and run tests:
+
+```bash
+pip install -r requirements-dev.txt
+pytest tests/ -v
+```
+
+Run tests with coverage:
+
+```bash
+pytest tests/ --cov=app --cov-report=term-missing
+```
+
+### Manual endpoint checks
 
 Test the endpoints using curl:
 

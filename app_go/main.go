@@ -152,25 +152,25 @@ func healthHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func main() {
+func setupEcho() *echo.Echo {
 	e := echo.New()
-
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-
 	e.GET("/", mainHandler)
 	e.GET("/health", healthHandler)
+	return e
+}
 
+func main() {
+	e := setupEcho()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = "0.0.0.0"
 	}
-
 	addr := fmt.Sprintf("%s:%s", host, port)
 	fmt.Printf("Starting DevOps Info Service on %s\n", addr)
 	e.Logger.Fatal(e.Start(addr))
