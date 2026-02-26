@@ -1,0 +1,58 @@
+---
+- name: Log in to Docker Hub
+  community.docker.docker_login:
+    username: "{{ dockerhub_username }}"
+    password: "{{ dockerhub_password }}"
+  no_log: true
+
+- name: Pull application image
+  community.docker.docker_image:
+    name: "{{ docker_image }}:{{ docker_image_tag }}"
+    source: pull
+  notify: restart app container
+
+- name: Gather current container info
+  community.docker.docker_container_info:
+    name: "{{ app_container_name }}"
+  register: app_container_info
+  failed_when: false
+
+- name: Stop existing container if present
+  community.docker.docker_container:
+    name: "{{ app_container_name }}"
+    state: stopped
+  when: app_container_info.exists | default(false)
+
+- name: Remove existing container if present
+  community.docker.docker_container:
+    name: "{{ app_container_name }}"
+    state: absent
+  when: app_container_info.exists | default(false)
+
+- name: Run application container
+  community.docker.docker_container:
+    name: "{{ app_container_name }}"
+    image: "{{ docker_image }}:{{ docker_image_tag }}"
+    state: started
+    restart_policy: "{{ app_restart_policy }}"
+    published_ports:
+      - "{{ app_port }}:5000"
+    env: "{{ app_environment }}"
+
+- name: Wait for application port
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ app_port }}"
+    delay: 2
+    timeout: 60
+
+- name: Verify application health endpoint
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ app_port }}{{ app_healthcheck_path }}"
+    method: GET
+    status_code: 200
+    return_content: true
+  register: app_health_result
+  retries: 5
+  delay: 3
+  until: app_health_result.status == 200

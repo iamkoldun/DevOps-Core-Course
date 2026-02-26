@@ -1,0 +1,11 @@
+---
+app_name: devops-info-service
+app_container_name: "{{ app_name }}"
+docker_image: "{{ dockerhub_username }}/devops-info-service"
+docker_image_tag: latest
+app_port: 5000
+app_restart_policy: unless-stopped
+app_healthcheck_path: /health
+app_environment:
+  PORT: "{{ app_port | string }}"
+  HOST: 0.0.0.0
