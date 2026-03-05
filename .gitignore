@@ -12,3 +12,6 @@ __pycache__/
 *.pyc
 Pulumi.*.yaml
 .pulumi/
+*.retry
+.vault_pass
+ansible/inventory/*.pyc

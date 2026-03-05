@@ -1,0 +1,17 @@
+plugin: yandex.cloud.yandex_compute
+auth_kind: serviceaccountfile
+service_account_file: ~/.config/yandex-cloud/<service-account-key>.json
+folders:
+  - b1g***************redacted
+hostnames:
+  - name
+filters:
+  - status == "RUNNING"
+compose:
+  ansible_host: network_interfaces[0].primary_v4_address.one_to_one_nat.address
+  ansible_user: '"ubuntu"'
+groups:
+  webservers: labels.environment == "lab04"
+keyed_groups:
+  - key: labels.environment
+    prefix: env
