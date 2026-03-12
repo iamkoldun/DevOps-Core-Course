@@ -1,0 +1,12 @@
+---
+app_name: devops-info-service
+docker_image: "{{ dockerhub_username }}/devops-info-service"
+docker_tag: latest
+app_port: 8000
+app_internal_port: 5000
+compose_project_dir: "/opt/{{ app_name }}"
+docker_compose_version: "3.8"
+app_environment:
+  PORT: "{{ app_internal_port | string }}"
+  HOST: "0.0.0.0"
+web_app_wipe: false

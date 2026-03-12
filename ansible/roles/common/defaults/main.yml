@@ -10,3 +10,4 @@ common_packages:
   - gnupg
   - software-properties-common
 common_timezone: UTC
+common_deploy_user: ubuntu
