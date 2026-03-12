@@ -1,0 +1,42 @@
+---
+- name: Deploy monitoring stack with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ monitoring_base_dir }}"
+    state: present
+    recreate: auto
+    remove_orphans: true
+  register: compose_result
+
+- name: Wait for Loki to be ready
+  ansible.builtin.uri:
+    url: "http://localhost:{{ loki_port }}/ready"
+    method: GET
+    status_code: 200
+  register: loki_ready
+  until: loki_ready.status == 200
+  retries: 12
+  delay: 5
+
+- name: Wait for Grafana to be ready
+  ansible.builtin.uri:
+    url: "http://localhost:{{ grafana_port }}/api/health"
+    method: GET
+    status_code: 200
+  register: grafana_ready
+  until: grafana_ready.status == 200
+  retries: 12
+  delay: 5
+
+- name: Verify Loki data source configured in Grafana
+  ansible.builtin.uri:
+    url: "http://localhost:{{ grafana_port }}/api/datasources/name/Loki"
+    method: GET
+    status_code: 200
+    url_username: "{{ grafana_admin_user }}"
+    url_password: "{{ grafana_admin_password }}"
+    force_basic_auth: true
+  register: datasource_check
+
+- name: Show deployment result
+  ansible.builtin.debug:
+    msg: "Monitoring stack deployed. Loki datasource uid: {{ datasource_check.json.uid }}"
