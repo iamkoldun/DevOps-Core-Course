@@ -1,0 +1,76 @@
+---
+- name: Create monitoring directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  loop:
+    - "{{ monitoring_base_dir }}"
+    - "{{ monitoring_base_dir }}/loki"
+    - "{{ monitoring_base_dir }}/promtail"
+    - "{{ monitoring_base_dir }}/grafana/provisioning/datasources"
+    - "{{ monitoring_base_dir }}/grafana/provisioning/dashboards"
+    - "{{ monitoring_base_dir }}/grafana/dashboards"
+
+- name: Template docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ monitoring_base_dir }}/docker-compose.yml"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Template Loki configuration
+  ansible.builtin.template:
+    src: loki-config.yml.j2
+    dest: "{{ monitoring_base_dir }}/loki/config.yml"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Template Promtail configuration
+  ansible.builtin.template:
+    src: promtail-config.yml.j2
+    dest: "{{ monitoring_base_dir }}/promtail/config.yml"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Template Grafana datasource provisioning
+  ansible.builtin.template:
+    src: datasource-loki.yml.j2
+    dest: "{{ monitoring_base_dir }}/grafana/provisioning/datasources/loki.yml"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Copy Grafana dashboard provider config
+  ansible.builtin.copy:
+    content: |
+      apiVersion: 1
+      providers:
+        - name: Lab07 Dashboards
+          orgId: 1
+          folder: Lab07
+          type: file
+          disableDeletion: false
+          updateIntervalSeconds: 10
+          allowUiUpdates: true
+          options:
+            path: /var/lib/grafana/dashboards
+    dest: "{{ monitoring_base_dir }}/grafana/provisioning/dashboards/provider.yml"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Create .env file for Grafana secrets
+  ansible.builtin.copy:
+    content: |
+      GF_SECURITY_ADMIN_USER={{ grafana_admin_user }}
+      GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}
+    dest: "{{ monitoring_base_dir }}/.env"
+    mode: "0600"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
