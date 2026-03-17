@@ -10,6 +10,7 @@
     - "{{ monitoring_base_dir }}"
     - "{{ monitoring_base_dir }}/loki"
     - "{{ monitoring_base_dir }}/promtail"
+    - "{{ monitoring_base_dir }}/prometheus"
     - "{{ monitoring_base_dir }}/grafana/provisioning/datasources"
     - "{{ monitoring_base_dir }}/grafana/provisioning/dashboards"
     - "{{ monitoring_base_dir }}/grafana/dashboards"
@@ -38,10 +39,26 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
 
-- name: Template Grafana datasource provisioning
+- name: Template Prometheus configuration
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: "{{ monitoring_base_dir }}/prometheus/prometheus.yml"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Template Grafana Loki datasource provisioning
   ansible.builtin.template:
     src: datasource-loki.yml.j2
     dest: "{{ monitoring_base_dir }}/grafana/provisioning/datasources/loki.yml"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Template Grafana Prometheus datasource provisioning
+  ansible.builtin.template:
+    src: datasource-prometheus.yml.j2
+    dest: "{{ monitoring_base_dir }}/grafana/provisioning/datasources/prometheus.yml"
     mode: "0644"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
@@ -51,9 +68,9 @@
     content: |
       apiVersion: 1
       providers:
-        - name: Lab07 Dashboards
+        - name: Lab Dashboards
           orgId: 1
-          folder: Lab07
+          folder: Labs
           type: file
           disableDeletion: false
           updateIntervalSeconds: 10
@@ -64,6 +81,17 @@
     mode: "0644"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
+
+- name: Copy Grafana dashboard JSONs
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ monitoring_base_dir }}/grafana/dashboards/"
+    mode: "0644"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  loop:
+    - grafana-logs-dashboard.json
+    - grafana-app-dashboard.json
 
 - name: Create .env file for Grafana secrets
   ansible.builtin.copy:

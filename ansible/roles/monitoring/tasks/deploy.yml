@@ -17,6 +17,16 @@
   retries: 12
   delay: 5
 
+- name: Wait for Prometheus to be ready
+  ansible.builtin.uri:
+    url: "http://localhost:{{ prometheus_port }}/-/healthy"
+    method: GET
+    status_code: 200
+  register: prometheus_ready
+  until: prometheus_ready.status == 200
+  retries: 12
+  delay: 5
+
 - name: Wait for Grafana to be ready
   ansible.builtin.uri:
     url: "http://localhost:{{ grafana_port }}/api/health"
@@ -35,8 +45,21 @@
     url_username: "{{ grafana_admin_user }}"
     url_password: "{{ grafana_admin_password }}"
     force_basic_auth: true
-  register: datasource_check
+  register: loki_datasource_check
+
+- name: Verify Prometheus data source configured in Grafana
+  ansible.builtin.uri:
+    url: "http://localhost:{{ grafana_port }}/api/datasources/name/Prometheus"
+    method: GET
+    status_code: 200
+    url_username: "{{ grafana_admin_user }}"
+    url_password: "{{ grafana_admin_password }}"
+    force_basic_auth: true
+  register: prometheus_datasource_check
 
 - name: Show deployment result
   ansible.builtin.debug:
-    msg: "Monitoring stack deployed. Loki datasource uid: {{ datasource_check.json.uid }}"
+    msg:
+      - "Monitoring stack deployed successfully"
+      - "Loki datasource uid: {{ loki_datasource_check.json.uid }}"
+      - "Prometheus datasource uid: {{ prometheus_datasource_check.json.uid }}"

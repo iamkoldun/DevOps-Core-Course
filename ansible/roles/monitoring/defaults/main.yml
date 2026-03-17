@@ -2,14 +2,31 @@
 loki_version: "3.0.0"
 promtail_version: "3.0.0"
 grafana_version: "11.4.0"
+prometheus_version: "3.9.0"
 
 loki_port: 3100
 promtail_port: 9080
 grafana_port: 3000
+prometheus_port: 9090
 
 loki_retention_period: "168h"
 loki_schema_version: "v13"
 loki_schema_from: "2024-01-01"
+
+prometheus_retention_days: 15
+prometheus_retention_size: "10GB"
+prometheus_scrape_interval: "15s"
+
+prometheus_targets:
+  - job: "prometheus"
+    targets: ["localhost:9090"]
+  - job: "loki"
+    targets: ["loki:3100"]
+  - job: "grafana"
+    targets: ["grafana:3000"]
+  - job: "app"
+    targets: ["app-python:5000"]
+    path: "/metrics"
 
 monitoring_base_dir: "/home/{{ ansible_user }}/monitoring"
 
@@ -36,8 +53,13 @@ promtail_cpu_limit: "0.5"
 promtail_memory_reservation: "64M"
 promtail_cpu_reservation: "0.1"
 
+prometheus_memory_limit: "1G"
+prometheus_cpu_limit: "1.0"
+prometheus_memory_reservation: "256M"
+prometheus_cpu_reservation: "0.25"
+
 grafana_memory_limit: "512M"
-grafana_cpu_limit: "1.0"
+grafana_cpu_limit: "0.5"
 grafana_memory_reservation: "128M"
 grafana_cpu_reservation: "0.25"
 
