@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: Lab07 Dashboards
+  - name: Lab Dashboards
     orgId: 1
-    folder: Lab07
+    folder: Labs
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10
