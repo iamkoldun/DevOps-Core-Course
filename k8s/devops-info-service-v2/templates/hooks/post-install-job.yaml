@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "devops-info-service-v2.fullname" . }}-post-install"
+  labels:
+    {{- include "devops-info-service-v2.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "{{ include "devops-info-service-v2.fullname" . }}-post-install"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: post-install-job
+          image: busybox
+          command: ['sh', '-c', 'echo Running post-install smoke test for v2... && sleep 5 && echo Done']
