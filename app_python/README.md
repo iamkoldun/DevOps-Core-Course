@@ -114,6 +114,37 @@ Returns health status and uptime information.
 curl http://localhost:5000/health
 ```
 
+### GET /visits
+
+Returns the current persisted visits counter. Counter is incremented on every `/` request and stored in `${DATA_DIR}/visits` (default `/data/visits`).
+
+**Response:**
+```json
+{"visits": 42, "source": "/data/visits"}
+```
+
+### GET /config
+
+Returns the loaded configuration file (from `${CONFIG_PATH}`, default `/config/config.json`) together with configuration-related environment variables.
+
+## Persistence & Configuration
+
+The service uses two external sources of configuration / state:
+
+| Source | Path | Purpose |
+|--------|------|---------|
+| `CONFIG_PATH` | `/config/config.json` | JSON config file (mounted from a Kubernetes ConfigMap or a Docker volume) |
+| `DATA_DIR` | `/data` | Persistent directory used to store `visits` counter |
+
+### Local testing with Docker Compose
+
+```bash
+cd app_python
+docker compose up --build
+```
+
+Counter is kept under `./data/visits` on the host; configuration is read from `./config/config.json`. Restarting the container preserves the counter because the volume is mounted from the host.
+
 ## Testing
 
 ### Unit tests
