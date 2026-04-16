@@ -28,6 +28,16 @@ env:
   - name: PORT
     value: "5000"
 
+secrets:
+  username: "placeholder"
+  password: "placeholder"
+
+vault:
+  enabled: false
+  role: "devops-info-service"
+  secretPath: "secret/data/devops-info-service/config"
+  template: ""
+
 securityContext:
   runAsNonRoot: true
   runAsUser: 1000
