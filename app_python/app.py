@@ -3,6 +3,8 @@ import time
 import socket
 import platform
 import logging
+import json
+import threading
 from datetime import datetime, timezone
 from flask import Flask, jsonify, request, Response
 from pythonjsonlogger import jsonlogger
@@ -13,6 +15,9 @@ app = Flask(__name__)
 HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 5000))
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DATA_DIR = os.getenv('DATA_DIR', '/data')
+CONFIG_PATH = os.getenv('CONFIG_PATH', '/config/config.json')
+VISITS_FILE = os.path.join(DATA_DIR, 'visits')
 
 handler = logging.StreamHandler()
 handler.setFormatter(jsonlogger.JsonFormatter(
@@ -25,6 +30,7 @@ root_logger.setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 START_TIME = datetime.now(timezone.utc)
+_visits_lock = threading.Lock()
 
 http_requests_total = Counter(
     'http_requests_total',
@@ -56,9 +62,50 @@ system_info_collection_seconds = Histogram(
     buckets=[0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
 )
 
+visits_counter_gauge = Gauge(
+    'devops_info_visits_total',
+    'Total visits to the root endpoint (persisted)'
+)
+
+
+def _read_visits():
+    try:
+        with open(VISITS_FILE, 'r') as f:
+            return int((f.read() or '0').strip())
+    except (FileNotFoundError, ValueError):
+        return 0
+
+
+def _write_visits(value):
+    os.makedirs(DATA_DIR, exist_ok=True)
+    tmp = VISITS_FILE + '.tmp'
+    with open(tmp, 'w') as f:
+        f.write(str(value))
+    os.replace(tmp, VISITS_FILE)
+
+
+def increment_visits():
+    with _visits_lock:
+        current = _read_visits() + 1
+        try:
+            _write_visits(current)
+        except OSError as e:
+            logger.warning("Visits file not writable", extra={'path': VISITS_FILE, 'error': str(e)})
+        visits_counter_gauge.set(current)
+        return current
+
+
+def load_config():
+    try:
+        with open(CONFIG_PATH, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.warning("Config file not loaded", extra={'path': CONFIG_PATH, 'error': str(e)})
+        return {}
+
 
 def _normalize_path(path):
-    known = {'/', '/health', '/metrics'}
+    known = {'/', '/health', '/metrics', '/visits', '/config'}
     return path if path in known else path
 
 
@@ -142,8 +189,10 @@ def metrics():
 @app.route('/')
 def index():
     devops_info_endpoint_calls.labels(endpoint='/').inc()
+    visits = increment_visits()
     uptime = get_uptime()
     system_info = get_system_info()
+    cfg = load_config()
     response = {
         'service': {
             'name': 'devops-info-service',
@@ -164,9 +213,17 @@ def index():
             'method': request.method,
             'path': request.path
         },
+        'visits': visits,
+        'config': {
+            'app_env': os.getenv('APP_ENV', 'unknown'),
+            'log_level': os.getenv('LOG_LEVEL', 'INFO'),
+            'feature_greeting': cfg.get('features', {}).get('greeting', False),
+        },
         'endpoints': [
-            {'path': '/', 'method': 'GET', 'description': 'Service information'},
+            {'path': '/', 'method': 'GET', 'description': 'Service information (increments visits)'},
             {'path': '/health', 'method': 'GET', 'description': 'Health check'},
+            {'path': '/visits', 'method': 'GET', 'description': 'Current visits counter'},
+            {'path': '/config', 'method': 'GET', 'description': 'Loaded configuration'},
             {'path': '/metrics', 'method': 'GET', 'description': 'Prometheus metrics'}
         ]
     }
@@ -183,6 +240,30 @@ def health():
         'uptime_seconds': uptime['seconds']
     }
     return jsonify(response)
+
+
+@app.route('/visits')
+def visits():
+    devops_info_endpoint_calls.labels(endpoint='/visits').inc()
+    with _visits_lock:
+        count = _read_visits()
+    return jsonify({'visits': count, 'source': VISITS_FILE})
+
+
+@app.route('/config')
+def config_endpoint():
+    devops_info_endpoint_calls.labels(endpoint='/config').inc()
+    cfg = load_config()
+    return jsonify({
+        'file': CONFIG_PATH,
+        'loaded': bool(cfg),
+        'content': cfg,
+        'env': {
+            'APP_ENV': os.getenv('APP_ENV'),
+            'LOG_LEVEL': os.getenv('LOG_LEVEL'),
+            'FEATURE_FLAG_BETA': os.getenv('FEATURE_FLAG_BETA'),
+        }
+    })
 
 
 @app.errorhandler(404)
@@ -204,5 +285,6 @@ def internal_error(error):
 
 
 if __name__ == '__main__':
-    logger.info("Starting DevOps Info Service", extra={'host': HOST, 'port': PORT})
+    visits_counter_gauge.set(_read_visits())
+    logger.info("Starting DevOps Info Service", extra={'host': HOST, 'port': PORT, 'data_dir': DATA_DIR})
     app.run(host=HOST, port=PORT, debug=DEBUG)

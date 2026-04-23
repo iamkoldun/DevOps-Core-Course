@@ -11,24 +11,28 @@ spec:
       {{- include "devops-info-service.selectorLabels" . | nindent 6 }}
   strategy:
     type: {{ .Values.strategy.type }}
+    {{- if eq .Values.strategy.type "RollingUpdate" }}
     rollingUpdate:
       maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
       maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
+    {{- end }}
   template:
     metadata:
       labels:
         {{- include "devops-info-service.selectorLabels" . | nindent 8 }}
-      {{- if .Values.vault.enabled }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if .Values.vault.enabled }}
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: {{ .Values.vault.role | quote }}
         vault.hashicorp.com/agent-inject-secret-config: {{ .Values.vault.secretPath | quote }}
-      {{- end }}
+        {{- end }}
     spec:
       securityContext:
         runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
         runAsUser: {{ .Values.securityContext.runAsUser }}
         runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        fsGroup: {{ .Values.securityContext.fsGroup | default .Values.securityContext.runAsGroup }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -39,6 +43,8 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "devops-info-service.fullname" . }}-secret
+            - configMapRef:
+                name: {{ include "devops-info-service.fullname" . }}-env
           {{- if .Values.env }}
           env:
             {{- include "devops-info-service.envVars" . | nindent 12 }}
@@ -49,3 +55,20 @@ spec:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: {{ .Values.configMount.mountPath }}
+              readOnly: true
+            {{- if .Values.persistence.enabled }}
+            - name: data-volume
+              mountPath: {{ .Values.persistence.mountPath }}
+            {{- end }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "devops-info-service.fullname" . }}-config
+        {{- if .Values.persistence.enabled }}
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: {{ include "devops-info-service.fullname" . }}-data
+        {{- end }}

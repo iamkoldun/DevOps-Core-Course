@@ -1,0 +1,11 @@
+{
+  "app_name": "devops-info-service",
+  "environment": "production",
+  "features": {
+    "greeting": true,
+    "experimental_metrics": false
+  },
+  "limits": {
+    "max_payload_bytes": 65536
+  }
+}

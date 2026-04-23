@@ -12,3 +12,5 @@ ENV/
 .idea/
 *.swp
 *.swo
+data/visits
+data/visits.tmp
