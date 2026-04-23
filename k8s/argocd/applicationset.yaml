@@ -4,18 +4,22 @@ metadata:
   name: devops-info-service-set
   namespace: argocd
 spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
   generators:
     - list:
         elements:
           - env: dev
             namespace: dev
             valuesFile: values-dev.yaml
+            autoSync: "true"
           - env: prod
             namespace: prod
             valuesFile: values-prod.yaml
+            autoSync: "false"
   template:
     metadata:
-      name: 'devops-info-service-set-{{env}}'
+      name: 'devops-info-service-set-{{.env}}'
     spec:
       project: default
       source:
@@ -24,11 +28,19 @@ spec:
         path: k8s/devops-info-service
         helm:
           valueFiles:
-            - '{{valuesFile}}'
+            - '{{.valuesFile}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{namespace}}'
+        namespace: '{{.namespace}}'
       syncPolicy:
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
+  templatePatch: |
+    {{- if eq .autoSync "true" }}
+    spec:
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+    {{- end }}
