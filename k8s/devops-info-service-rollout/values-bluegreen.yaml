@@ -1,0 +1,13 @@
+strategy:
+  type: blueGreen
+  blueGreen:
+    autoPromotionEnabled: false
+    scaleDownDelaySeconds: 30
+
+env:
+  - name: HOST
+    value: "0.0.0.0"
+  - name: PORT
+    value: "5000"
+  - name: APP_VERSION
+    value: "v1-blue"

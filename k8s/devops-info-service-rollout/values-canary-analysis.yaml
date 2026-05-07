@@ -1,0 +1,17 @@
+analysis:
+  enabled: true
+
+strategy:
+  type: canary
+  canary:
+    steps:
+      - setWeight: 20
+      - pause:
+          duration: 20s
+      - analysis:
+          templates:
+            - templateName: canary-devops-info-service-rollout-success-rate
+      - setWeight: 50
+      - pause:
+          duration: 20s
+      - setWeight: 100
