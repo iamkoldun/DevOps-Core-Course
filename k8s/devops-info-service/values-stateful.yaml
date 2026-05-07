@@ -1,0 +1,29 @@
+replicaCount: 3
+
+workload:
+  kind: StatefulSet
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 5000
+  nodePort: 30082
+
+persistence:
+  enabled: true
+  size: 100Mi
+  accessMode: ReadWriteOnce
+  mountPath: /data
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
