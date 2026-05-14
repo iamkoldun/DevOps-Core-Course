@@ -33,3 +33,56 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   value: {{ .value | quote }}
 {{- end }}
 {{- end }}
+
+{{- define "devops-info-service.initContainers" -}}
+{{- if .Values.initContainers.download.enabled }}
+- name: init-download
+  image: {{ .Values.initContainers.download.image | quote }}
+  command:
+    - sh
+    - -c
+    - |
+      set -eux
+      echo "[init-download] fetching {{ .Values.initContainers.download.url }}"
+      wget -q -O {{ .Values.initContainers.download.targetFile }} {{ .Values.initContainers.download.url }}
+      echo "[init-download] saved $(wc -c < {{ .Values.initContainers.download.targetFile }}) bytes"
+  volumeMounts:
+    - name: init-data
+      mountPath: {{ .Values.initContainers.download.mountPath }}
+{{- end }}
+{{- if .Values.initContainers.waitForService.enabled }}
+- name: wait-for-service
+  image: {{ .Values.initContainers.waitForService.image | quote }}
+  command:
+    - sh
+    - -c
+    - |
+      set -eu
+      echo "[wait-for-service] resolving {{ .Values.initContainers.waitForService.service }} ..."
+      deadline=$(( $(date +%s) + {{ .Values.initContainers.waitForService.timeoutSeconds }} ))
+      until nslookup {{ .Values.initContainers.waitForService.service }} >/dev/null 2>&1; do
+        if [ "$(date +%s)" -ge "$deadline" ]; then
+          echo "[wait-for-service] timed out after {{ .Values.initContainers.waitForService.timeoutSeconds }}s"
+          exit 1
+        fi
+        echo "  not ready yet, sleeping 2s"
+        sleep 2
+      done
+      echo "[wait-for-service] dependency reachable"
+{{- end }}
+{{- end }}
+
+{{- define "devops-info-service.initVolumeMount" -}}
+{{- if .Values.initContainers.download.enabled }}
+- name: init-data
+  mountPath: {{ .Values.initContainers.download.mountPath }}
+  readOnly: true
+{{- end }}
+{{- end }}
+
+{{- define "devops-info-service.initVolume" -}}
+{{- if .Values.initContainers.download.enabled }}
+- name: init-data
+  emptyDir: {}
+{{- end }}
+{{- end }}

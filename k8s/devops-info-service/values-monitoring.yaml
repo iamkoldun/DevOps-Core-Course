@@ -1,0 +1,39 @@
+replicaCount: 2
+
+workload:
+  kind: Deployment
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 5000
+  nodePort: 30080
+
+initContainers:
+  download:
+    enabled: true
+    image: busybox:1.36
+    url: "https://raw.githubusercontent.com/kubernetes/website/main/README.md"
+    targetFile: "/init-data/banner.txt"
+    mountPath: /init-data
+  waitForService:
+    enabled: true
+    image: busybox:1.36
+    service: "kube-dns.kube-system.svc.cluster.local"
+    timeoutSeconds: 120
+
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 10s
+  path: /metrics
+  labels:
+    release: monitoring
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
