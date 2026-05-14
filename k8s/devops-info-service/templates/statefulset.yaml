@@ -35,6 +35,10 @@ spec:
         runAsUser: {{ .Values.securityContext.runAsUser }}
         runAsGroup: {{ .Values.securityContext.runAsGroup }}
         fsGroup: {{ .Values.securityContext.fsGroup | default .Values.securityContext.runAsGroup }}
+      {{- if or .Values.initContainers.download.enabled .Values.initContainers.waitForService.enabled }}
+      initContainers:
+        {{- include "devops-info-service.initContainers" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -64,10 +68,12 @@ spec:
               readOnly: true
             - name: data
               mountPath: {{ .Values.persistence.mountPath }}
+            {{- include "devops-info-service.initVolumeMount" . | nindent 12 }}
       volumes:
         - name: config-volume
           configMap:
             name: {{ include "devops-info-service.fullname" . }}-config
+        {{- include "devops-info-service.initVolume" . | nindent 8 }}
   volumeClaimTemplates:
     - metadata:
         name: data

@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-download-demo
+  labels:
+    app: init-download-demo
+    lab: "16"
+spec:
+  restartPolicy: Never
+  initContainers:
+    - name: init-download
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          set -eux
+          echo "[init-download] fetching banner.txt"
+          wget -q -O /work-dir/banner.txt https://raw.githubusercontent.com/kubernetes/website/main/README.md
+          echo "[init-download] saved $(wc -c < /work-dir/banner.txt) bytes"
+          ls -la /work-dir
+      volumeMounts:
+        - name: workdir
+          mountPath: /work-dir
+  containers:
+    - name: main-app
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          echo "[main] reading file provided by init container:"
+          head -20 /data/banner.txt
+          echo "[main] sleeping forever (use kubectl exec to inspect)"
+          sleep 3600
+      volumeMounts:
+        - name: workdir
+          mountPath: /data
+  volumes:
+    - name: workdir
+      emptyDir: {}
