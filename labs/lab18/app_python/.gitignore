@@ -1,0 +1,10 @@
+result
+result-*
+venv/
+venv1/
+venv2/
+__pycache__/
+*.pyc
+freeze1.txt
+freeze2.txt
+requirements-unpinned.txt
