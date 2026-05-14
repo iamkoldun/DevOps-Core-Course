@@ -2,7 +2,12 @@
 
 Release: {{ .Release.Name }}
 Namespace: {{ .Release.Namespace }}
+Workload: {{ .Values.workload.kind }}
 Replicas: {{ .Values.replicaCount }}
+{{- if eq .Values.workload.kind "StatefulSet" }}
+Headless Service: {{ include "devops-info-service.fullname" . }}-headless
+Pod DNS pattern: <pod>.{{ include "devops-info-service.fullname" . }}-headless.{{ .Release.Namespace }}.svc.cluster.local
+{{- end }}
 
 Access the application:
 {{- if eq .Values.service.type "NodePort" }}

@@ -8,6 +8,14 @@ image:
 nameOverride: ""
 fullnameOverride: ""
 
+workload:
+  kind: Deployment
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+
 service:
   type: NodePort
   port: 80
